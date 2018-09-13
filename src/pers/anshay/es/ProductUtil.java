@@ -10,6 +10,10 @@ import java.util.List;
 import org.apache.commons.io.FileUtils;
 
 
+/**工具类：把数据从文本中导出来
+ * @author Anshay
+ * @createDate 2018年9月13日
+ */
 public class ProductUtil {
 	
 

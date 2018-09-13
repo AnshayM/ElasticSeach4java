@@ -2,6 +2,7 @@ package pers.anshay.es;
 
 import java.io.IOException;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.http.HttpHost;
@@ -11,6 +12,7 @@ import org.elasticsearch.action.admin.cluster.repositories.get.GetRepositoriesAc
 import org.elasticsearch.action.admin.indices.create.CreateIndexRequest;
 import org.elasticsearch.action.admin.indices.delete.DeleteIndexRequest;
 import org.elasticsearch.action.admin.indices.open.OpenIndexRequest;
+import org.elasticsearch.action.bulk.BulkRequest;
 import org.elasticsearch.action.delete.DeleteRequest;
 import org.elasticsearch.action.get.GetRequest;
 import org.elasticsearch.action.get.GetResponse;
@@ -18,7 +20,10 @@ import org.elasticsearch.action.index.IndexRequest;
 import org.elasticsearch.action.update.UpdateRequest;
 import org.elasticsearch.client.RestClient;
 import org.elasticsearch.client.RestHighLevelClient;
-
+/**
+ * @author Anshay
+ * @createDate 2018年9月13日
+ */
 public class TestElasticSearch4J {
 	private static String indexName = "how2java";
 	private static RestHighLevelClient client = new RestHighLevelClient(
@@ -30,29 +35,51 @@ public class TestElasticSearch4J {
 			createIndex(indexName);
 		}
 		// 准备数据
-		Product product = new Product();
-		product.setId(1);
-		product.setName("product1");
+		// Product product = new Product();
+		// product.setId(1);
+		// product.setName("product1");
+		List<Product> products = ProductUtil.file2list("140k_products.txt");
+		System.out.println("准备数据，总计" + products.size() + "条");
+		
+		batchInsert(products);
 
-		addDocument(product);
-		// 获取文档
-		getDocument(1);
-		// 修改文档
-		updateDocument(product);
-
-		getDocument(1);
-
-		// 删除文档
-//		deleteDocument(1);
-
-		getDocument(1);
-		// 关闭连接
+		// addDocument(product);
+		// // 获取文档
+		// getDocument(1);
+		// // 修改文档
+		// updateDocument(product);
+		//
+		// getDocument(1);
+		//
+		// // 删除文档
+		//// deleteDocument(1);
+		//
+		// getDocument(1);
 
 		// if (checkExistIndex(indexName)) {
 		// deleteIndex(indexName);
 		// }
 		// checkExistIndex(indexName);
+
+		// 关闭连接
 		client.close();
+	}
+
+	/**
+	 * 批量插入数据
+	 * 
+	 * @param products
+	 * @throws IOException
+	 */
+	private static void batchInsert(List<Product> products) throws IOException {
+		BulkRequest request = new BulkRequest();
+		for (Product p : products) {
+			Map<String, Object> map = p.toMap();
+			IndexRequest insertRequest = new IndexRequest(indexName, "product", String.valueOf(p.getId())).source(map);
+			request.add(insertRequest);
+		}
+		client.bulk(request);
+		System.out.println("批量插入完成");
 	}
 
 	private static void deleteDocument(int id) throws IOException {
@@ -92,7 +119,6 @@ public class TestElasticSearch4J {
 	 * 添加文档
 	 * 
 	 * @param p
-	 *            被添加的实体
 	 * @throws IOException
 	 */
 	private static void addDocument(Product p) throws IOException {
